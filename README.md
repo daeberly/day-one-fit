@@ -96,6 +96,21 @@ Every 4 weeks the app asks for a **check-in day**: progress photos plus the fitn
 5. 1.5-mile run or walk last, then your heart rate drop.
 6. Review: compare photos in Photos, check the test results in Progress, and set the next month's focus.
 
+### Daily dashboard
+The top of Today shows three rings (checklist, calories, water), how many calories you have left, a one-tap **+ Water** button, and a strip of the week with a progress bar for each day. Tap any day in the strip to open it.
+
+### Weekly loss target
+On the Weight tab, pick a pace of 0.5 to 3 lb per week and the goal date moves to match (the plan line on the chart follows). The card shows the daily calorie deficit that pace needs, warns above 2 lb a week, and can suggest a calorie target if you enter the calories you burn (it never goes below 1,500). After two weeks of weigh-ins it compares your real 7-day-average pace with the target and says how many calories to change.
+
+### Calories
+Each meal shows rough calories for the planned option. Marking a meal **As planned** or **Swapped** counts it, **Skipped** counts zero, and you can type your own calories on any meal (and on Other food) to override the estimate. The daily target defaults to 2,000 and you can change it in More. These are estimates. If your 7-day average weight stops dropping for two weeks, lower the target by 100-150.
+
+### Exercise pictures
+Each lift has start and finish diagrams and a **Watch a video** link that opens a form demo search. The diagrams are simple stick figures, so use the video for fine detail.
+
+### Strength and balance
+In Progress, the **Strength** section shows a strength index (100 = your first sessions), progress by muscle group, a balance check that flags a group falling behind, hard sets per muscle group over the last 7 days, and each lift's estimated max. **Energy** tracks a 1-5 daily energy and workout-feel rating and compares energy after longer and shorter sleep.
+
 ### Heart rate
 Everything is in the app, with no second app needed. Open it from the **Heart rate** button on Today, from **Count** inside any cardio block, or from the interval timer.
 
@@ -157,3 +172,26 @@ In **More** you can change your starting weight, goal weight, goal date, water g
 - The plan is a general training and eating framework, not medical advice. Check with your doctor before starting a new program, especially the sprint and jump work, and skip anything that causes sharp pain.
 - The app works offline after the first load.
 - Fonts and graphics are built in. There are no external libraries or trackers.
+
+## v9: Coach, food AI, body composition, time-lapse
+
+- **Coach tab (✦):** status (on track / behind / way behind), a "Get back on path" list that tells you exactly what to do about missed sessions, logging gaps, calories, protein, sleep and weight behind plan (with one-tap make-up and goal-date shift buttons), a strict daily schedule that checks itself off, a 7-day letter grade, your numbers (weeks left, lb/week needed, kcal/day deficit), 4-week milestones, strength targets for your size, athletic benchmarks and do/don't lists.
+- **Photos tab** is now in the tab bar, with a **time-lapse** player and Save video.
+- **Food:** quick-add foods and a custom entry on every meal, protein tracking, and optional **Analyze photo with AI** (your own Anthropic API key, saved only on the phone, never in backups). "Copy AI prompt" works with no key.
+- **Body card:** height and age, BMI, body fat (BMI-based, or tape-based from waist and neck), fat and lean pounds, waist ÷ height and a quick converter. Neck is a new monthly test.
+- Upload `index.html`, `sw.js` and `README.md` to the repo, then close and reopen the app (Settings, More shows "Day One Fit v10").
+
+## v10: stress, alcohol and monthly photo read
+
+- **Today tab:** log stress (1-5) and alcoholic drinks. Each drink counts about 150 kcal. Coach flags heavy drinking weeks and high-stress runs, and the 7-day grade card shows both.
+- **Photos tab, Monthly photo read:** optional AI coaching read of your latest front, side and back photos (fat areas, lagging muscles, posture, 3 focuses). Needs your API key. It deliberately gives no body-fat number from photos.
+
+## v11: fruit, juice, milk and cheese allowances
+
+- **Today tab:** an allowance card counts whole fruit, juice and sweet drinks, milk, chocolate milk, cheese and sweets you add with + Add food, with calories and "free sugar" (juice, sweet drinks, added sugar) against a 50 g daily ceiling.
+- **Coach tab:** a plain-language guide to what each costs in calories and sugar, and which to keep, measure or skip.
+- Quick-add list now includes juices, chocolate milk, skim and whole milk, more fruit and more cheeses.
+
+## v12: extra activity
+
+- **Today tab, Extra activity:** log anything not on the plan (run, bike ride, hike, sports, games with the kids). Search or pick from the drop-down list, or type your own. Add minutes, optional miles (pace is calculated), effort, average heart rate and a note. Estimated calories burned are shown, and extra minutes appear in the Coach 7-day card.
