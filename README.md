@@ -195,3 +195,26 @@ In **More** you can change your starting weight, goal weight, goal date, water g
 ## v12: extra activity
 
 - **Today tab, Extra activity:** log anything not on the plan (run, bike ride, hike, sports, games with the kids). Search or pick from the drop-down list, or type your own. Add minutes, optional miles (pace is calculated), effort, average heart rate and a note. Estimated calories burned are shown, and extra minutes appear in the Coach 7-day card.
+
+## v13: scan a workout screen
+
+- **Today tab, Extra activity, Scan a screen photo:** take a photo of a fan bike, rower or treadmill display, a heart rate screenshot, or a screenshot from another fitness app. The AI reads minutes, distance, calories, heart rate and watts into the form for you to check before saving. Uses your API key; "Copy scan prompt" works with the Claude app instead. Machine-reported calories are used when shown.
+
+## v14: machine calories field, cheaper scans
+
+- Extra activity has a "kcal shown on machine" box, so a fan bike or rower screen can be typed in manually in seconds with no AI. Machine calories replace the app's estimate.
+- Screen scans send a smaller image (1,000 px), which lowers the per-scan cost.
+
+## v15: heart rate on extra activity
+
+- Extra activity now takes average bpm, max bpm and 1-minute recovery drop. The list shows the heart rate zone for your average (set your age in Coach for accurate zones) and rejects impossible values.
+
+## v16: average and max watts, speed, cadence
+
+- Extra activity has a "Watts, speed, cadence (average and max)" panel, matching machines like the Rogue Echo bike that show AVG and MAX screens.
+- Screen scans accept up to 3 photos at once (for example the AVG screen and the MAX screen of one workout) and merge them into one entry.
+
+## v17: zone minutes and training baseline
+
+- Extra activity: optional minutes in each heart rate zone (Z1-Z5). Weekly zone totals appear in the Coach 7-day card. Scans read zone minutes when an app shows them.
+- Coach tab, **Training baseline and trends:** groups extra activity by type, sets a baseline from your first 3 sessions, shows best, typical and lowest, and compares your recent 3 sessions with the baseline (improving, steady or slipping), then lists where you are doing well and what needs work.
