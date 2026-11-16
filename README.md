@@ -218,3 +218,10 @@ In **More** you can change your starting weight, goal weight, goal date, water g
 
 - Extra activity: optional minutes in each heart rate zone (Z1-Z5). Weekly zone totals appear in the Coach 7-day card. Scans read zone minutes when an app shows them.
 - Coach tab, **Training baseline and trends:** groups extra activity by type, sets a baseline from your first 3 sessions, shows best, typical and lowest, and compares your recent 3 sessions with the baseline (improving, steady or slipping), then lists where you are doing well and what needs work.
+
+## v18: step logs, warm-up and stretch checklists, workout timing
+
+- **Speed, agility and plyos day:** every step is a checkbox in order (warm-up, sprints, agility, plyometrics, cool-down). Sprint, shuttle and L-drill reps take a time in seconds, with best and average shown. Entering a time marks the rep done.
+- **Interval finisher, pool intervals and zone 2:** per-round and per-phase checkboxes.
+- **Warm-up checklist** on lifting days, and the **stretch routine** is now one checkbox per stretch.
+- **Workout timing:** every check is quietly time-stamped. The Today tab shows session start, end and length, the number of checks and any gaps of 10+ minutes, and flags workouts over 75 minutes. The Coach tab adds average workout length and a fix when workouts run long or get distracted. Check boxes as you go for accurate numbers.

@@ -1,0 +1,12 @@
+{
+  "name": "day-one-fit-tests",
+  "private": true,
+  "description": "jsdom regression tests for the single-file Day One Fit app",
+  "scripts": {
+    "test": "node test-core.js && node test-coach.js"
+  },
+  "dependencies": {
+    "fake-indexeddb": "^6.2.6",
+    "jsdom": "^30.1.3"
+  }
+}

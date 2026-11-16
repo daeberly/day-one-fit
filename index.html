@@ -338,6 +338,7 @@ function cardioBlock(id,d,wk){
  var c=CARDIO[id](wk),D=getDay(d),x=(D.cardio&&D.cardio[id])||{};
  return '<div class="card"><div class="row"><h3 style="margin:0">'+esc(c.t)+'</h3><span class="sp"></span><span class="tg small" style="color:var(--accent)">~'+c.m+' min</span></div>'+
   '<ul class="tight small">'+c.steps.map(function(s){return '<li>'+esc(s)+'</li>';}).join('')+'</ul>'+
+  partsHTML(id,x,wk)+
   (TPRE[id]?'<div class="chips" style="margin:0 0 8px"><button class="pill" data-act="timer" data-preset="'+TPRE[id]+'">Open interval timer</button></div>':'')+
   '<div class="row"><button class="chk '+(x.done?'on':'')+'" data-act="cardiodone" data-id="'+id+'" aria-label="Mark cardio done">✓</button>'+
   '<input class="in" inputmode="numeric" placeholder="min" value="'+(x.min!=null?x.min:'')+'" data-chg="cardio" data-id="'+id+'" data-f="min" aria-label="Minutes done">'+
@@ -385,11 +386,10 @@ function viewToday(){
  h+=wForm(false);
  h+='<h2>'+esc(plan.name)+'</h2><p class="small muted">'+esc(phaseText(wk))+'</p>';
  var cb='';plan.cardio.forEach(function(c){cb+=cardioBlock(c,d,wk);});
- var lb=plan.ex.length?'<div class="card">'+plan.ex.map(function(e){return exBlock(e,d);}).join('')+'</div>':'';
+ var lb=plan.ex.length?warmCard(d)+'<div class="card">'+plan.ex.map(function(e){return exBlock(e,d);}).join('')+'</div>':'';
  h+=plan.cardioFirst?cb+lb:lb+cb;
  h+=extraCard(d);
- h+='<div class="card"><div class="row"><h3 style="margin:0">Stretch routine</h3><span class="sp"></span><span class="small muted">about 8 min</span></div><ul class="tight small">'+STRETCH.map(function(s){return '<li>'+esc(s[0])+' — '+esc(s[1])+'</li>';}).join('')+'</ul>'+
-  '<button class="btn '+(D.checks&&D.checks.stretch?'':'ghost')+'" data-act="stretchdone">'+(D.checks&&D.checks.stretch?'Stretching done ✓':'Mark stretching done')+'</button></div>';
+ h+=stretchCard(d)+timingCard(d);
  h+='<h2>Food</h2>'+SLOTS.map(function(s){return mealBlock(s,d);}).join('');
  h+='<h2>Water and sleep</h2><div class="card"><div class="row"><h3 style="margin:0">Water</h3><span class="sp"></span><span class="small muted">'+water+' of '+wg+' bottles (16 oz)</span></div><div class="bottles">'+bott+'</div>'+
   '<div class="row"><button class="btn ghost sm" data-act="water" data-n="-1">− 1</button><button class="btn sm" data-act="water" data-n="1">+ 1 bottle</button></div></div>';
@@ -524,7 +524,7 @@ function viewMore(){
  '<button class="btn" data-act="export">Export data (no photos)</button><button class="btn ghost" data-act="exportall">Export everything with photos</button>'+
  '<button class="btn ghost" data-act="import">Import a backup</button><input type="file" accept="application/json,.json" hidden id="imp" data-chg="import"></div>'+
  '<div class="card"><h3>Put it on your home screen</h3><p class="small">iPhone: open this page in Safari, tap Share, then Add to Home Screen. Android: Chrome menu, then Install app or Add to Home Screen.</p></div>'+
- aiCard()+'<div class="card"><button class="btn danger" data-act="reset">Erase all data</button></div><p class="small muted" style="text-align:center">Day One Fit v17</p>';
+ aiCard()+'<div class="card"><button class="btn danger" data-act="reset">Erase all data</button></div><p class="small muted" style="text-align:center">Day One Fit v18</p>';
 }
 function render(){
  var app=$('#app');
@@ -1530,7 +1530,7 @@ function week7(){
  o.score=Math.round(sc);o.grade=sc>=90?'A':sc>=80?'B':sc>=70?'C':sc>=60?'D':'F';
  var ma=wSeries().ma,a=ma.filter(function(x){return x.d<=addDays(today(),-7);}).pop(),b=ma[ma.length-1];
  o.dw=a&&b?b.v-a.v:null;
- o.zones=weekZones();o.xmin=ds.reduce(function(t,d){return t+extraMin(d);},0);o.xkc=ds.reduce(function(t,d){return t+extraKcal(d);},0);o.alc=ds.reduce(function(t,d){return t+alcOf(d);},0);var sv=ds.filter(function(d){return stressOf(d)>0;});o.stress=sv.length?sv.reduce(function(t,d){return t+stressOf(d);},0)/sv.length:null;o.alcDays=ds.filter(function(d){return alcOf(d)>=3;}).length;
+ o.zones=weekZones();o.tm=weekTiming();o.xmin=ds.reduce(function(t,d){return t+extraMin(d);},0);o.xkc=ds.reduce(function(t,d){return t+extraKcal(d);},0);o.alc=ds.reduce(function(t,d){return t+alcOf(d);},0);var sv=ds.filter(function(d){return stressOf(d)>0;});o.stress=sv.length?sv.reduce(function(t,d){return t+stressOf(d);},0)/sv.length:null;o.alcDays=ds.filter(function(d){return alcOf(d)>=3;}).length;
  return o;
 }
 function catchUp(){
@@ -1556,7 +1556,8 @@ function catchUp(){
  if(getDay(yd).sleep&&getDay(yd).sleep.hours&&+getDay(yd).sleep.hours<6)add(78,'Short night: adjust today','Under 6 hours. Keep the weights but cut 1 set per lift and skip all-out sprints today. Zone 2 is fine.');
  if(n.vsPlan>0.5){var xk=Math.min(300,Math.round(n.vsPlan*250/25)*25);add(n.vsPlan>1.5?85:62,'Weight is '+f1(n.vsPlan)+' lb behind plan','Close the gap without crash dieting: cut about '+xk+' kcal/day or add 2 extra zone 2 sessions (30 min) this week, not both. Check again in 7 days.');}
  if(n.vsPlan>4)add(66,'Goal date is slipping','You are over 4 lb behind. A realistic fix is moving the goal date out '+Math.ceil(n.vsPlan/Math.max(0.8,n.planRate))+' weeks instead of crash dieting.',{a:'shiftgoal',w:Math.ceil(n.vsPlan/Math.max(0.8,n.planRate)),label:'Move goal date out '+Math.ceil(n.vsPlan/Math.max(0.8,n.planRate))+' wk'});
-  if(wk.alc>=8||wk.alcDays>=1)add(wk.alcDays?74:58,'Alcohol is costing you','You logged '+wk.alc+' drinks this week'+(wk.alcDays?', with '+wk.alcDays+' heavy day'+(wk.alcDays>1?'s':''):'')+'. Each drink is about 150 kcal and pauses fat burning for hours, and it wrecks sleep. Cap it at 2 drinks, twice a week, or cut it entirely until the next test.');
+  if(wk.tm&&(wk.tm.long>=2||wk.tm.gappy>=2))add(57,'Workouts are running long','Your workouts are running long or have 15+ minute gaps (avg '+(wk.tm.avg!=null?Math.round(wk.tm.avg):'?')+' min, '+wk.tm.long+' over '+LONG_MIN+'). Use the rest timer, keep rests to 60-90 seconds, put the phone away between sets and drop optional extras. Long and distracted workouts raise fatigue without adding results.');
+ if(wk.alc>=8||wk.alcDays>=1)add(wk.alcDays?74:58,'Alcohol is costing you','You logged '+wk.alc+' drinks this week'+(wk.alcDays?', with '+wk.alcDays+' heavy day'+(wk.alcDays>1?'s':''):'')+'. Each drink is about 150 kcal and pauses fat burning for hours, and it wrecks sleep. Cap it at 2 drinks, twice a week, or cut it entirely until the next test.');
  if(wk.stress!=null&&wk.stress>=4)add(64,'Stress is running high','Average stress '+f1(wk.stress)+' of 5. High stress raises cortisol, which drives belly fat, cravings and poor sleep. Keep the workouts but make zone 2 your cardio (no extra sprints), take a 10 minute walk after lunch, and protect your lights-out time.');
  A.sort(function(a,b){return b.sev-a.sev;});
  return A;
@@ -1581,7 +1582,7 @@ function scoreCard(){
   '<tr><td>Workouts done</td><td>'+w.work+' of '+w.n+'</td></tr><tr><td>Avg checklist</td><td>'+Math.round(w.pct*100)+'%</td></tr><tr><td>Days food logged</td><td>'+w.logged+' of '+w.n+'</td></tr>'+
   '<tr><td>Avg calories</td><td>'+(w.kcal!=null?w.kcal+' (target '+kcalGoal()+')':'log meals')+'</td></tr><tr><td>Avg protein</td><td>'+(w.prot!=null?w.prot+' g (target '+protGoal()+')':'—')+'</td></tr>'+
   '<tr><td>Water goal days</td><td>'+w.water+' of '+w.n+'</td></tr><tr><td>Avg sleep</td><td>'+(w.sleep!=null?f1(w.sleep)+' h':'log sleep')+'</td></tr>'+
-  '<tr><td>Zone minutes (extra)</td><td>'+(w.zones.some(function(v){return v>0;})?'Z2 '+w.zones[1]+', Z3 '+w.zones[2]+', hard Z4-5 '+(w.zones[3]+w.zones[4]):'log zone minutes')+'</td></tr><tr><td>Extra activity</td><td>'+w.xmin+' min'+(w.xkc?', about '+w.xkc+' kcal':'')+'</td></tr><tr><td>Alcohol drinks</td><td>'+w.alc+'</td></tr><tr><td>Avg stress</td><td>'+(w.stress!=null?f1(w.stress)+' of 5':'log it')+'</td></tr><tr><td>Weight change</td><td>'+(w.dw!=null?(w.dw>0?'+':'')+f1(w.dw)+' lb':'—')+'</td></tr></table><p class="small muted">Grade: workouts 40%, checklist 25%, food logging 15%, water 10%, sleep 10%. A is 90+.</p></div>';
+  '<tr><td>Avg workout length</td><td>'+(w.tm.avg!=null?Math.round(w.tm.avg)+' min'+(w.tm.long?', '+w.tm.long+' over '+LONG_MIN:''):'check boxes as you go')+'</td></tr><tr><td>Zone minutes (extra)</td><td>'+(w.zones.some(function(v){return v>0;})?'Z2 '+w.zones[1]+', Z3 '+w.zones[2]+', hard Z4-5 '+(w.zones[3]+w.zones[4]):'log zone minutes')+'</td></tr><tr><td>Extra activity</td><td>'+w.xmin+' min'+(w.xkc?', about '+w.xkc+' kcal':'')+'</td></tr><tr><td>Alcohol drinks</td><td>'+w.alc+'</td></tr><tr><td>Avg stress</td><td>'+(w.stress!=null?f1(w.stress)+' of 5':'log it')+'</td></tr><tr><td>Weight change</td><td>'+(w.dw!=null?(w.dw>0?'+':'')+f1(w.dw)+' lb':'—')+'</td></tr></table><p class="small muted">Grade: workouts 40%, checklist 25%, food logging 15%, water 10%, sleep 10%. A is 90+.</p></div>';
 }
 function milestoneCard(){
  var st=S.settings,rows='',d=st.startDate,ma=wSeries().ma,i=0;
@@ -1941,6 +1942,118 @@ function trendsCard(){
  return h+'</div>';
 }
 
+/* ---------- step-by-step checklists inside cardio and speed blocks ---------- */
+function P(id,g,label,n,timed){return {id:id,g:g,label:label,n:n,timed:!!timed};}
+var PARTS={
+ speed:function(wk){
+  var ph=wk<=2?1:wk<=6?2:3,a=[];
+  a.push(P('w1','Warm-up','5 min easy jog or bike',1),P('w2','Warm-up','Leg swings, 10 per side',1),P('w3','Warm-up','Walking lunge with a twist, 8 per side',1),P('w4','Warm-up','A-skips, 20 yd',2),P('w5','Warm-up','High knees, 20 yd',2),P('w6','Warm-up','Build-up runs, 40 yd (50%, 70%, 80%)',3));
+  if(ph===1){a.push(P('s','Sprints','Sprint, 20 yd at 75%. Enter time if you have it.',6,true),P('a1','Agility','5-10-5 shuttle at 75%',3,true),P('a2','Agility','Lateral shuffles, 10 yd',4),P('a3','Agility','Ladder: two feet in every box',2),P('a4','Agility','Ladder: lateral in-out',2),P('p1','Plyometrics','Fast step-ups on a 12-inch box (6 reps)',3),P('p2','Plyometrics','Small pogo hops (8 reps)',3),P('p3','Plyometrics','Squat jumps, stick the landing 2 sec (5 reps)',3));}
+  else if(ph===2){a.push(P('s','Sprints','Sprint, 30 yd at 85-90%, standing start',6,true),P('a1','Agility','5-10-5 shuttle at 85%',4,true),P('a2','Agility','Lateral shuffles, 10 yd, staying low',6),P('a3','Agility','Ladder patterns (3 patterns, 2 rounds)',6),P('a4','Agility','L-drill, 3 cones',3,true),P('p1','Plyometrics','Box jumps (5 reps), step down',3),P('p2','Plyometrics','Broad jumps (5 reps), stick each landing',3),P('p3','Plyometrics','Lateral bounds, 6 per side',3));}
+  else {a.push(P('s','Sprints','Sprint, 30-40 yd at 95%, 2-point start',8,true),P('a1','Agility','5-10-5 shuttle at full speed',5,true),P('a4','Agility','L-drill',4,true),P('a2','Agility','Lateral shuffle, then sprint 10 yd on a call',6),P('a3','Agility','Ladder patterns (4 patterns, 2 rounds)',8),P('p1','Plyometrics','Box jumps (5 reps), step down',4),P('p2','Plyometrics','Broad jumps (5 reps), then sprint 10 yd',3),P('p3','Plyometrics','Lateral bounds, 6 per side',3),P('p4','Plyometrics','Jump rope, 2 min',1));}
+  a.push(P('c1','Cool-down','5 min easy walk',1));
+  return a;
+ },
+ finisher:function(){return [P('r','Finisher','Round: 1 min HARD (8/10), then 1 min EASY',5)];},
+ zone2:function(){return [P('w','Zone 2','5 min easy warm-up',1),P('m','Zone 2','Steady zone 2 block (talk in full sentences)',1),P('c','Zone 2','5 min easy cool-down',1)];},
+ pool_sun:function(wk){return poolParts(wk,6);},
+ pool_thu:function(wk){return poolParts(wk,8);}
+};
+function poolParts(wk,base){return [P('w','Pool','Warm-up: 4 easy lengths',1),P('r','Pool','Round: 2 lengths HARD, 2 lengths EASY, rest 15 sec',poolR(wk,base)),P('c','Pool','Cool-down: 2 easy lengths',1)];}
+function partState(x,pid,i){var a=x.p&&x.p[pid];return (a&&a[i])||{};}
+function partCounts(id,x,wk){
+ var parts=PARTS[id]?PARTS[id](wk):[],done=0,total=0;
+ parts.forEach(function(pt){for(var i=0;i<pt.n;i++){total++;if(partState(x,pt.id,i).d)done++;}});
+ return {done:done,total:total,parts:parts};
+}
+function partsHTML(id,x,wk){
+ if(!PARTS[id])return '';
+ var pc=partCounts(id,x,wk),h='<div style="margin:8px 0"><div class="row"><b>Step log</b><span class="sp"></span><span class="small '+(pc.done===pc.total?'good':'muted')+'"><b>'+pc.done+' of '+pc.total+'</b></span></div>',g=null;
+ pc.parts.forEach(function(pt){
+  if(pt.g!==g){g=pt.g;h+='<div class="small muted" style="margin-top:10px;text-transform:uppercase;letter-spacing:.05em"><b>'+esc(g)+'</b></div>';}
+  var dn=0,ts=[],i;for(i=0;i<pt.n;i++){var st=partState(x,pt.id,i);if(st.d)dn++;if(st.t>0)ts.push(st.t);}
+  h+='<div style="margin-top:6px"><div class="small">'+esc(pt.label)+' <span class="muted">('+dn+'/'+pt.n+')</span></div>';
+  if(pt.timed){
+   for(i=0;i<pt.n;i++){var s2=partState(x,pt.id,i);h+='<div class="setrow"><span class="sn">'+(i+1)+'</span><input class="in" inputmode="decimal" placeholder="sec" value="'+(s2.t!=null?s2.t:'')+'" data-chg="parttime" data-id="'+id+'" data-p="'+pt.id+'" data-i="'+i+'" aria-label="Time in seconds, rep '+(i+1)+'"><span class="u">sec</span><button class="chk '+(s2.d?'on':'')+'" data-act="partrep" data-id="'+id+'" data-p="'+pt.id+'" data-i="'+i+'" aria-label="Mark rep '+(i+1)+' done">✓</button></div>';}
+   if(ts.length)h+='<div class="small muted">Best '+f1(Math.min.apply(null,ts))+' s, average '+f1(mean(ts))+' s</div>';
+  } else {
+   h+='<div class="chips" style="margin:4px 0 0">';
+   for(i=0;i<pt.n;i++){h+='<button class="pill '+(partState(x,pt.id,i).d?'on':'')+'" data-act="partrep" data-id="'+id+'" data-p="'+pt.id+'" data-i="'+i+'" aria-label="'+esc(pt.label)+' '+(i+1)+'">'+(pt.n>1?(i+1):'✓ done')+'</button>';}
+   h+='</div>';
+  }
+  h+='</div>';
+ });
+ return h+'<button class="btn ghost sm" style="margin-top:8px" data-act="partsall" data-id="'+id+'">Mark every step done</button></div>';
+}
+function partToggle(date,id,pid,i,wk){
+ var D=ensureDay(date);D.cardio=D.cardio||{};var c=D.cardio[id]||(D.cardio[id]={});c.p=c.p||{};c.p[pid]=c.p[pid]||[];while(c.p[pid].length<=i)c.p[pid].push({});
+ var st=c.p[pid][i];st.d=!st.d;if(st.d)st.ts=Date.now();else{delete st.ts;if(!(st.t>0))c.p[pid][i]={};}
+ partSync(c,id,wk);save();
+}
+function partSync(c,id,wk){var pc=partCounts(id,c,wk);if(pc.total&&pc.done===pc.total)c.done=true;}
+
+/* ---------- warm-up and stretch checklists, silent timestamps, workout timing ---------- */
+var WARM=['3 min easy cardio (bike, incline walk or row)','Arm circles and band pull-aparts, 10 each','Bodyweight squats, 10 slow reps','Glute bridges, 10 reps','Cat-cow, 6 slow reps','Ramp-up: first lift at about half weight, 6 reps'];
+function warmCard(d){
+ var D=getDay(d),w=D.warm||{},n=0,i;for(i=0;i<WARM.length;i++)if(w[i])n++;
+ return '<div class="card"><div class="row"><h3 style="margin:0">Warm-up</h3><span class="sp"></span><span class="small '+(n===WARM.length?'good':'muted')+'"><b>'+n+' of '+WARM.length+'</b></span></div><p class="small muted" style="margin:4px 0">About 6 minutes. Do not skip it, and do not stretch it out into a half hour.</p>'+
+  WARM.map(function(t,i){return '<div class="wl"><button class="chk '+(w[i]?'on':'')+'" data-act="warmchk" data-i="'+i+'" aria-label="Mark done">✓</button><div style="flex:1;min-width:0" class="small">'+esc(t)+'</div></div>';}).join('')+'</div>';
+}
+function stretchCard(d){
+ var D=getDay(d),w=D.stretch||{},n=0,i;for(i=0;i<STRETCH.length;i++)if(w[i])n++;
+ var all=D.checks&&D.checks.stretch;
+ return '<div class="card"><div class="row"><h3 style="margin:0">Stretch routine</h3><span class="sp"></span><span class="small '+(all?'good':'muted')+'"><b>'+n+' of '+STRETCH.length+'</b> · about 8 min</span></div>'+
+  STRETCH.map(function(s,i){return '<div class="wl"><button class="chk '+(w[i]?'on':'')+'" data-act="stretchchk" data-i="'+i+'" aria-label="Mark done">✓</button><div style="flex:1;min-width:0" class="small">'+esc(s[0])+' <span class="muted">— '+esc(s[1])+'</span></div></div>';}).join('')+
+  '<button class="btn '+(all?'':'ghost')+'" data-act="stretchdone">'+(all?'Stretching done ✓':'Mark stretching done')+'</button></div>';
+}
+function warmToggle(date,i){
+ var D=ensureDay(date);D.warm=D.warm||{};if(D.warm[i])delete D.warm[i];else D.warm[i]=Date.now();
+ if(!Object.keys(D.warm).length)delete D.warm;save();
+}
+function stretchToggle(date,i){
+ var D=ensureDay(date);D.stretch=D.stretch||{};if(D.stretch[i])delete D.stretch[i];else D.stretch[i]=Date.now();
+ var n=Object.keys(D.stretch).length;D.checks=D.checks||{};D.checks.stretch=n>=STRETCH.length;
+ if(!n)delete D.stretch;save();
+}
+/* timing */
+function stampList(d,withStretch){
+ var D=getDay(d),out=[],ex,i,id,pid;
+ Object.keys(D.sets||{}).forEach(function(k){(D.sets[k]||[]).forEach(function(s){if(s&&s.ts)out.push({t:s.ts,k:'lift',l:(EX[k]&&EX[k].n)||k});});});
+ Object.keys(D.cardio||{}).forEach(function(k){var c=D.cardio[k];if(c.dts)out.push({t:c.dts,k:'cardio',l:k});Object.keys(c.p||{}).forEach(function(pi){(c.p[pi]||[]).forEach(function(s){if(s&&s.ts)out.push({t:s.ts,k:'cardio',l:k});});});});
+ Object.keys(D.warm||{}).forEach(function(k){if(D.warm[k]>1)out.push({t:D.warm[k],k:'warm',l:'Warm-up'});});
+ if(withStretch)Object.keys(D.stretch||{}).forEach(function(k){if(D.stretch[k]>1)out.push({t:D.stretch[k],k:'stretch',l:'Stretch'});});
+ return out.sort(function(a,b){return a.t-b.t;});
+}
+function tFmt(t){var x=new Date(t),h=x.getHours(),m=x.getMinutes();return (h%12||12)+':'+(m<10?'0':'')+m+(h<12?' AM':' PM');}
+function timeSessions(d,withStretch){
+ var L=stampList(d,withStretch),out=[],cur=null,i;
+ for(i=0;i<L.length;i++){
+  if(!cur||L[i].t-cur.end>45*60000){cur={start:L[i].t,end:L[i].t,n:0,gaps:[],kinds:{}};out.push(cur);}
+  else{var g=(L[i].t-cur.end)/60000;if(g>=10)cur.gaps.push({min:Math.round(g),from:cur.end,to:L[i].t});}
+  cur.end=L[i].t;cur.n++;cur.kinds[L[i].k]=1;
+ }
+ out.forEach(function(s){s.len=Math.round((s.end-s.start)/60000);s.longest=s.gaps.reduce(function(m,g){return Math.max(m,g.min);},0);});
+ return out;
+}
+var LONG_MIN=75;
+function timingCard(d){
+ var ss=timeSessions(d,true).filter(function(s){return s.n>=2;});
+ if(!ss.length)return '';
+ var h='<div class="card"><h3>Workout timing</h3><p class="small muted">Recorded quietly from the time you check things off. Check boxes as you go for accurate numbers.</p>';
+ ss.forEach(function(s){
+  var st=s.kinds.stretch&&!s.kinds.lift&&!s.kinds.cardio&&!s.kinds.warm,long=!st&&s.len>LONG_MIN;
+  h+='<div class="wl" style="align-items:flex-start"><div style="flex:1;min-width:0"><b>'+tFmt(s.start)+' to '+tFmt(s.end)+'</b> <span class="small muted">'+(st?'stretching':'workout')+'</span><div class="small"><b class="'+(long?'bad':'good')+'">'+s.len+' min</b>, '+s.n+' checks'+(s.longest?', longest gap '+s.longest+' min':'')+'</div>'+
+   (long?'<div class="small bad">Over '+LONG_MIN+' min. Trim rests to 60-90 seconds, keep the phone in your bag, and stop adding extras.</div>':'')+
+   (s.gaps.length?'<div class="small muted">Gaps of 10+ min: '+s.gaps.slice(0,3).map(function(g){return g.min+' min ('+tFmt(g.from)+' to '+tFmt(g.to)+')';}).join(', ')+'</div>':'')+'</div></div>';
+ });
+ return h+'</div>';
+}
+function weekTiming(){
+ var ds=coachDays(7,true),ss=[];ds.forEach(function(d){timeSessions(d,false).filter(function(s){return s.n>=3;}).forEach(function(s){ss.push(s);});});
+ var lens=ss.map(function(s){return s.len;});
+ return {n:ss.length,avg:lens.length?mean(lens):null,long:ss.filter(function(s){return s.len>LONG_MIN;}).length,gappy:ss.filter(function(s){return s.longest>=15;}).length};
+}
+
 /* ---------- actions ---------- */
 function download(name,text){
  var blob=new Blob([text],{type:'application/json'});
@@ -1995,8 +2108,8 @@ function act(a,t){
    var last=lastSets(ex,UI.date),lp=last[i]||last[last.length-1]||{},plan=planFor(UI.date).ex.filter(function(e){return e[0]===ex;})[0];
    if(s0.r==null){s0.r=lp.r!=null?lp.r:EX[ex].r[0];}
    if(s0.w==null&&!EX[ex].timed&&lp.w!=null)s0.w=lp.w;
-   s0.done=true;
-  }else s0.done=false;
+   s0.done=true;s0.ts=Date.now();
+  }else{s0.done=false;delete s0.ts;}
   save();render();
   if(s0.done&&restSec()>0)tStart([{name:'REST',sec:restSec(),type:'rest',quiet:true}],'Rest between sets','go');
   break;}
@@ -2004,9 +2117,13 @@ function act(a,t){
   var plan2=planFor(UI.date).ex.filter(function(e){return e[0]===t.dataset.ex;})[0];
   while(D.sets[t.dataset.ex].length<(plan2?plan2[1]:0))D.sets[t.dataset.ex].push({});
   D.sets[t.dataset.ex].push({});save();render();break;
- case 'cardiodone':D=ensureDay(UI.date);D.cardio=D.cardio||{};var c=D.cardio[t.dataset.id]||(D.cardio[t.dataset.id]={});c.done=!c.done;
+ case 'partrep':partToggle(UI.date,t.dataset.id,t.dataset.p,+t.dataset.i,weekOf(UI.date));render();break;
+ case 'partsall':{D=ensureDay(UI.date);D.cardio=D.cardio||{};var pcx=D.cardio[t.dataset.id]||(D.cardio[t.dataset.id]={});pcx.p=pcx.p||{};partCounts(t.dataset.id,pcx,weekOf(UI.date)).parts.forEach(function(pt){pcx.p[pt.id]=pcx.p[pt.id]||[];for(var qi=0;qi<pt.n;qi++){pcx.p[pt.id][qi]=Object.assign({},pcx.p[pt.id][qi],{d:true});}});pcx.done=true;save();render();toast('All steps marked');break;}
+ case 'cardiodone':D=ensureDay(UI.date);D.cardio=D.cardio||{};var c=D.cardio[t.dataset.id]||(D.cardio[t.dataset.id]={});c.done=!c.done;if(c.done)c.dts=Date.now();else delete c.dts;
   if(c.done&&c.min==null){c.min=CARDIO[t.dataset.id](weekOf(UI.date)).m;}
   save();render();break;
+ case 'warmchk':warmToggle(UI.date,t.dataset.i);render();break;
+ case 'stretchchk':stretchToggle(UI.date,t.dataset.i);render();break;
  case 'stretchdone':D=ensureDay(UI.date);D.checks=D.checks||{};D.checks.stretch=!D.checks.stretch;save();render();break;
  case 'mealstat':D=ensureDay(UI.date);D.meals=D.meals||{};D.meals[t.dataset.slot]=D.meals[t.dataset.slot]===t.dataset.v?undefined:t.dataset.v;if(!D.meals[t.dataset.slot])delete D.meals[t.dataset.slot];save();render();break;
  case 'water':D=ensureDay(UI.date);D.water=Math.max(0,(D.water||0)+(+t.dataset.n));save();render();break;
@@ -2070,6 +2187,7 @@ function chg(k,t){
  case 'set':{D=ensureDay(UI.date);D.sets=D.sets||{};var ex=t.dataset.ex,i=+t.dataset.i;D.sets[ex]=D.sets[ex]||[];while(D.sets[ex].length<=i)D.sets[ex].push({});var s=D.sets[ex][i]||(D.sets[ex][i]={});s[t.dataset.f]=numOrU(t.value);if(s[t.dataset.f]===undefined)delete s[t.dataset.f];save();updateBar();break;}
  case 'cardio':{D=ensureDay(UI.date);D.cardio=D.cardio||{};var c=D.cardio[t.dataset.id]||(D.cardio[t.dataset.id]={}),f=t.dataset.f;if(f==='note')c.note=t.value;else{var n=numOrU(t.value);if(n===undefined)delete c[f];else c[f]=n;}save();var hz=$('#hz-'+t.dataset.id);if(hz)hz.textContent=hrLine(c);break;}
  case 'scanfile':{var scf=t.files&&t.files.length?Array.prototype.slice.call(t.files,0,3):null;if(!scf)return;var sm=$('#xa-scan');if(sm)sm.textContent='Reading the screen…';scanScreen(scf).then(function(r){scanFill(r);},function(e){var m2=$('#xa-scan');if(m2)m2.textContent=e.message==='nokey'?'Add your API key in More first, or tap Copy scan prompt and use the Claude app.':e.message;});t.value='';break;}
+ case 'parttime':{D=ensureDay(UI.date);D.cardio=D.cardio||{};var pcc=D.cardio[t.dataset.id]||(D.cardio[t.dataset.id]={});pcc.p=pcc.p||{};var pa=pcc.p[t.dataset.p]=pcc.p[t.dataset.p]||[],pi=+t.dataset.i;while(pa.length<=pi)pa.push({});var pv=numOrU(t.value);if(pv===undefined||pv<=0||pv>3600){delete pa[pi].t;}else{pa[pi].t=Math.round(pv*100)/100;if(!pa[pi].d){pa[pi].d=true;pa[pi].ts=Date.now();}}partSync(pcc,t.dataset.id,weekOf(UI.date));save();render();break;}
  case 'sched':{var tv=t.value;S.settings.sched=S.settings.sched||{};if(/^\d\d:\d\d$/.test(tv)){S.settings.sched[t.dataset.id]=tv;save();render();}break;}
  case 'bcalc':{UI.bc[t.dataset.k]=t.value;var bo=$('#bc-out');if(bo)bo.innerHTML=bcOut(bcCalc());break;}
  case 'kcal':{D=ensureDay(UI.date);D.kcal=D.kcal||{};var kv=numOrU(t.value);if(kv===undefined||kv<0)delete D.kcal[t.dataset.slot];else D.kcal[t.dataset.slot]=Math.round(kv);save();render();break;}
@@ -2108,7 +2226,7 @@ function chg(k,t){
 document.addEventListener('click',function(e){var t=e.target.closest('[data-act]');if(t)act(t.dataset.act,t);});
 document.addEventListener('input',function(e){var t=e.target;if(t&&t.dataset&&t.dataset.live){if(t.dataset.live==='tlseek'){TL.t=tlTotal()*(+t.value)/1000;if(TL.run)tlPause();tlFrame();return;}UI.cmp[t.dataset.live]=+t.value;drawCompare();}if(t&&t.dataset&&t.dataset.fq){FQ.q=t.value;foodRows();}});
 document.addEventListener('change',function(e){var t=e.target;if(t&&t.dataset&&t.dataset.chg)chg(t.dataset.chg,t);});
-window.__dayone={trendGroups:trendGroups,trendsCard:trendsCard,weekZones:weekZones,scanParse:scanParse,scanScreen:scanScreen,scanFill:scanFill,scanActivity:scanActivity,extraAdd:extraAdd,extraCard:extraCard,actKcal:actKcal,extraKcal:extraKcal,allowUse:allowUse,allowCard:allowCard,bodyRead:bodyRead,readParse:readParse,readLatest:readLatest,alcOf:alcOf,stressCard:stressCard,planFor:planFor,workoutDone:workoutDone,numbers:numbers,catchUp:catchUp,coachStatus:coachStatus,week7:week7,schedRows:schedRows,coachFix:coachFix,protOf:protOf,protDay:protDay,addFood:addFood,aiParse:aiParse,aiAnalyze:aiAnalyze,aiApply:aiApply,tlFrames:tlFrames,tlState:tlState,navyBF:navyBF,bmiBF:bmiBF,bodyCard:bodyCard,bcCalc:bcCalc,coachView:coachView,sizeCard:sizeCard,FOODS:FOODS,mealBlock:mealBlock,schedICS:schedICS,tgtRate:tgtRate,paceCard:paceCard,actualRate:actualRate,kcalDay:kcalDay,kcalOf:kcalOf,strengthHTML:strengthHTML,energyHTML:energyHTML,liftIndex:liftIndex,POSE:POSE,figHTML:figHTML,barHTML:barHTML,EX:EX,hrMax:hrMax,zoneOf:zoneOf,hrTarget:hrTarget,hrProgress:hrProgress,hrOpen:hrOpen,HR:HR,hrRestAvg:hrRestAvg,buildICS:buildICS,nextDue:nextDue,dueItems:dueItems,reminderCard:reminderCard,TESTS:TESTS,parseVal:parseVal,saveTest:saveTest,testDue:testDue,openTest:openTest,heatRGBA:heatRGBA,defRGBA:defRGBA,lumOf:lumOf,loadBP:loadBP,bPut:bPut,fillPhotos:fillPhotos,BP:function(){return BP;},T:T,tick:tick,buildPhases:buildPhases,tStart:tStart,tStop:tStop,poolR:poolR,S:function(){return S;},UI:UI,render:render,act:act,chg:chg,wSeries:wSeries,dayStats:dayStats,gl:gl,ymd:ymd,load:load};
+window.__dayone={timeSessions:timeSessions,stampList:stampList,weekTiming:weekTiming,timingCard:timingCard,warmCard:warmCard,stretchCard:stretchCard,PARTS:PARTS,partCounts:partCounts,partToggle:partToggle,partsHTML:partsHTML,trendGroups:trendGroups,trendsCard:trendsCard,weekZones:weekZones,scanParse:scanParse,scanScreen:scanScreen,scanFill:scanFill,scanActivity:scanActivity,extraAdd:extraAdd,extraCard:extraCard,actKcal:actKcal,extraKcal:extraKcal,allowUse:allowUse,allowCard:allowCard,bodyRead:bodyRead,readParse:readParse,readLatest:readLatest,alcOf:alcOf,stressCard:stressCard,planFor:planFor,workoutDone:workoutDone,numbers:numbers,catchUp:catchUp,coachStatus:coachStatus,week7:week7,schedRows:schedRows,coachFix:coachFix,protOf:protOf,protDay:protDay,addFood:addFood,aiParse:aiParse,aiAnalyze:aiAnalyze,aiApply:aiApply,tlFrames:tlFrames,tlState:tlState,navyBF:navyBF,bmiBF:bmiBF,bodyCard:bodyCard,bcCalc:bcCalc,coachView:coachView,sizeCard:sizeCard,FOODS:FOODS,mealBlock:mealBlock,schedICS:schedICS,tgtRate:tgtRate,paceCard:paceCard,actualRate:actualRate,kcalDay:kcalDay,kcalOf:kcalOf,strengthHTML:strengthHTML,energyHTML:energyHTML,liftIndex:liftIndex,POSE:POSE,figHTML:figHTML,barHTML:barHTML,EX:EX,hrMax:hrMax,zoneOf:zoneOf,hrTarget:hrTarget,hrProgress:hrProgress,hrOpen:hrOpen,HR:HR,hrRestAvg:hrRestAvg,buildICS:buildICS,nextDue:nextDue,dueItems:dueItems,reminderCard:reminderCard,TESTS:TESTS,parseVal:parseVal,saveTest:saveTest,testDue:testDue,openTest:openTest,heatRGBA:heatRGBA,defRGBA:defRGBA,lumOf:lumOf,loadBP:loadBP,bPut:bPut,fillPhotos:fillPhotos,BP:function(){return BP;},T:T,tick:tick,buildPhases:buildPhases,tStart:tStart,tStop:tStop,poolR:poolR,S:function(){return S;},UI:UI,render:render,act:act,chg:chg,wSeries:wSeries,dayStats:dayStats,gl:gl,ymd:ymd,load:load};
 render();
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost')){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}
 })();
