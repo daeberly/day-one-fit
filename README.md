@@ -225,3 +225,15 @@ In **More** you can change your starting weight, goal weight, goal date, water g
 - **Interval finisher, pool intervals and zone 2:** per-round and per-phase checkboxes.
 - **Warm-up checklist** on lifting days, and the **stretch routine** is now one checkbox per stretch.
 - **Workout timing:** every check is quietly time-stamped. The Today tab shows session start, end and length, the number of checks and any gaps of 10+ minutes, and flags workouts over 75 minutes. The Coach tab adds average workout length and a fix when workouts run long or get distracted. Check boxes as you go for accurate numbers.
+
+## v19: cardio choices, pull-ups, arms, food fixes
+
+- **Thursday and Sunday are now "Cardio intervals":** pick Swim, Bike, Row, Run or Incline walk. Each option has its own steps, step log, timer preset and heart rate target, gets harder week by week, and counts the same in the Coach. The app remembers your last pick.
+- **Monday speed day has an indoor version** for rain or cold: bike sprints instead of field sprints, agility and jumps on a gym floor.
+- **Pull-ups (goal 10-15 strict):** Wednesday starts with strict pull-ups (singles and doubles count), then band-assisted pull-ups. Saturday has 5-second negatives and the lat pulldown. Log the band or machine assistance in the lb box: less help is progress. The app tells you when to use a lighter band, and when to add weight once you reach 8 strict reps.
+- **Optional pull-up practice** card on Today: 2-4 easy sets spread through the day, with a counter.
+- **Wednesday, chest, back and arms:** strict pull-ups, then supersets: incline press with band pull-ups, cable fly with chest-supported row, overhead triceps extension with incline curl, ab wheel with cable lateral raise, then the finisher.
+- **Saturday, full body, pull-ups and arms:** negatives, flat dumbbell bench with pulldown, goblet squat with lateral raise, assisted dips (or decline press) with cable curls facing away, face pulls, then a 15-min incline walk.
+- Supersets keep Wednesday and Saturday at about 60 minutes from warm-up through stretching. Every new lift has figures, a video link and deep-stretch cues.
+- **Food:** no fish or seafood in meal plans or quick-add (pork tenderloin and chicken instead). More protein options: pork, ground turkey, rotisserie chicken, turkey burger, chicken sausage, jerky, egg whites, ready-to-drink shakes, chili. The AI food coach is told not to suggest seafood.
+- **Add food fix:** tapping Add now flashes "✓ Added", shows the item at the top of the screen with a running total, and you can remove a mistake right there. The confirmation message no longer hides behind the food screen.

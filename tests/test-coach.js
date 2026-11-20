@@ -99,7 +99,7 @@ const addD=(s,n)=>{const x=new Date(s+'T12:00:00Z');x.setUTCDate(x.getUTCDate()+
  // ics
  ok(A.schedICS().includes('RRULE:FREQ=DAILY')&&A.schedICS().includes('BEGIN:VALARM'),'schedule ics');
  // more tab
- A.UI.tab='more';A.render();ok(/Food photo AI/.test(d.body.textContent)&&/v18/.test(d.body.textContent),'more has AI card + version');
+ A.UI.tab='more';A.render();ok(/Food photo AI/.test(d.body.textContent)&&/v19/.test(d.body.textContent),'more has AI card + version');
 
  // stress + alcohol
  A.UI.tab='today';A.UI.date=t0;A.render();
@@ -241,5 +241,60 @@ const addD=(s,n)=>{const x=new Date(s+'T12:00:00Z');x.setUTCDate(x.getUTCDate()+
  ok(A.catchUp().some(x=>/running long/.test(x.t)),'coach flags long workouts');
  A.UI.date=t0;
  ok(errors.length===0,'no errors timing '+errors.join('|'));
+ // ---- v19: cardio choices, pull-up/dip progression, new lifts, food fixes ----
+ const v_nextDow=(k)=>{let x=t0;for(let i=0;i<7;i++){if(new Date(x+'T12:00:00').getDay()===k&&x>t0)return x;x=addD(x,1);}x=addD(t0,1);while(new Date(x+'T12:00:00').getDay()!==k)x=addD(x,1);return x;};
+ const v_thu=v_nextDow(4),v_sun=v_nextDow(0),v_mon=v_nextDow(1),v_wed=v_nextDow(3),v_sat=v_nextDow(6);
+ A.UI.tab='today';A.UI.date=v_thu;A.render();
+ ok(/Cardio intervals/.test(d.body.textContent)&&d.querySelectorAll('[data-act=cpick][data-b=pool_thu]').length===5,'Thursday shows 5 cardio choices');
+ ok(A.planFor(v_thu).cardio[0]==='pool_thu','default is swim');
+ click('[data-act=cpick][data-v=bike_thu]');
+ ok(A.planFor(v_thu).cardio[0]==='bike_thu'&&/Bike intervals/.test(d.body.textContent)&&/90 sec EASY/.test(d.body.textContent),'pick bike shows bike intervals');
+ ok(S.settings.cpref.pool_thu==='bike_thu','bike remembered as preference');
+ const v_thu2=addD(v_thu,7);ok(A.planFor(v_thu2).cardio[0]==='bike_thu','next Thursday defaults to last pick');
+ click('[data-act=cardiodone][data-id=bike_thu]');ok(S.days[v_thu].cardio.bike_thu.done&&S.days[v_thu].cardio.bike_thu.min>0,'bike session done with minutes');
+ ok(A.workoutDone(v_thu),'bike counts as the Thursday workout');
+ A.cSetPick(v_thu2,'pool_thu','row_thu');ok(A.planFor(v_thu).cardio[0]==='bike_thu','past day with logged bike keeps bike after pref changes');
+ ok(A.planFor(v_thu2).cardio[0]==='row_thu','row picked for a later day');
+ A.cSetPick(v_thu2,'pool_thu','nope');ok(A.planFor(v_thu2).cardio[0]==='row_thu','invalid pick ignored');
+ ['bike_thu','row_thu','run_thu','walk_thu','bike_sun','row_sun','run_sun','walk_sun','speed_in'].forEach(id=>{const c=A.CARDIO[id](1),c9=A.CARDIO[id](9);ok(c.m>0&&c.steps.length>=2&&A.PARTS[id](1).length>=1&&c9.m>=c.m,id+' has steps, step log and progresses');});
+ ok(A.CARDIO.bike_thu(1).m<=45&&A.CARDIO.bike_sun(1).m<=35,'interval options fit the 40 and 30 min slots');
+ A.UI.date=v_sun;A.render();ok(d.querySelectorAll('[data-act=cpick][data-b=pool_sun]').length===5,'Sunday shows 5 choices');
+ A.UI.date=v_mon;A.render();click('[data-act=cpick][data-v=speed_in]');ok(/indoor/.test(d.body.textContent)&&/Bike sprint/.test(d.body.textContent),'Monday indoor speed option');
+ A.cSetPick(addD(v_mon,7),'speed','speed');
+ // Wednesday and Saturday lifts
+ const v_wl=A.WORKOUTS[3].ex.map(e=>e[0]),v_sl=A.WORKOUTS[6].ex.map(e=>e[0]);
+ ok(v_wl[0]==='pullup'&&v_wl.includes('bandpull')&&v_wl.includes('ohtri')&&v_wl.includes('inclcurl')&&v_wl.includes('inclinepress')&&!v_wl.includes('dbbench')&&!v_wl.includes('facepull'),'Wednesday: pull-ups, band pull-ups, arms; bench and face pull moved');
+ ok(v_sl[0]==='negpull'&&v_sl.includes('dbbench')&&v_sl.includes('facepull')&&v_sl.includes('dip')&&v_sl.includes('latraise')&&v_sl.includes('bayescurl'),'Saturday: negatives, bench, dips, laterals, curls, face pull');
+ const v_sets=(l)=>l.reduce((t,e)=>t+e[1],0);ok(v_sets(A.WORKOUTS[3].ex)<=24&&v_sets(A.WORKOUTS[6].ex)<=24,'set counts sized for about 60 min');
+ A.UI.date=v_wed;A.render();ok(/Superset A/.test(d.body.textContent)&&/Strict pull-up/.test(d.body.textContent)&&/Watch a video/.test(d.body.textContent),'Wednesday shows supersets and pull-ups');
+ ok(d.querySelector('[data-ex=bandpull][data-f=w]').getAttribute('placeholder')==='help lb','assisted lifts log help in lb');
+ // assisted progression: less help is progress
+ const v_w1=addD(v_wed,-7);S.days[v_w1]=S.days[v_w1]||{};S.days[v_w1].sets={bandpull:[{w:50,r:10,done:true},{w:50,r:10,done:true},{w:50,r:10,done:true}],dip:[{w:60,r:8,done:true},{w:60,r:8,done:true}],pullup:[{r:2,done:true},{r:1,done:true},{r:1,done:true}],negpull:[{r:5,done:true},{r:5,done:true},{r:5,done:true}]};
+ let v_pr=A.progress('bandpull',v_wed);ok(v_pr.k==='weight'&&/Less help/.test(v_pr.t)&&/40 lb/.test(v_pr.t),'band pull-up top reps -> less help (50 -> 40) '+v_pr.t);
+ v_pr=A.progress('dip',v_wed);ok(v_pr.k==='reps'&&/60 lb help/.test(v_pr.t),'dip mid-range -> add reps at same help');
+ v_pr=A.progress('pullup',v_wed);ok(v_pr.k==='reps'&&/bodyweight/.test(v_pr.t),'strict pull-ups -> add reps');
+ v_pr=A.progress('negpull',v_wed);ok(/8 sec/.test(v_pr.t),'negatives maxed -> slower lowering');
+ const v_w0=addD(v_wed,-14);S.days[v_w0]=S.days[v_w0]||{};S.days[v_w0].sets={dip:[{w:60,r:8,done:true},{w:60,r:8,done:true}]};
+ v_pr=A.progress('dip',v_wed);ok(v_pr.k==='repeat'&&/Stalled/.test(v_pr.t),'dip stall at same help -> repeat');
+ S.days[v_w1].sets.bandpull=[{w:0,r:10,done:true},{w:0,r:10,done:true},{w:0,r:10,done:true}];v_pr=A.progress('bandpull',v_wed);ok(/no help/.test(v_pr.t)&&/add 5 lb/.test(v_pr.t),'no help at top reps -> add weight');
+ S.days[v_w1].sets.pullup=[{r:8,done:true},{r:8,done:true},{r:8,done:true}];v_pr=A.progress('pullup',v_wed);ok(/dip belt/.test(v_pr.t),'8 strict reps -> weighted pull-ups');
+ ok(/strict reps as you can/.test(A.progress('pullup',addD(v_w0,-30)).t),'first pull-up session guidance');
+ A.UI.tab='progress';A.render();ok(/Arms and shoulders/.test(d.body.textContent),'strength groups include arms and shoulders');
+ A.UI.tab='today';
+ // pull-up practice
+ A.UI.date=t0;A.render();const v_g0=(S.days[t0]&&S.days[t0].gtg)||0;click('[data-act=gtg][data-n="1"]');click('[data-act=gtg][data-n="1"]');click('[data-act=gtg][data-n="-1"]');ok(S.days[t0].gtg===v_g0+1&&/Pull-up practice/.test(d.body.textContent),'pull-up practice counter');
+ // food: no seafood, more options, add feedback
+ const v_allMeal=Object.values(A.MEALS).map(m=>m.opts.join(' ')).join(' ')+' '+A.FOODS.map(f=>f[0]).join(' ');
+ ok(!/fish|shrimp|tuna|salmon|seafood/i.test(v_allMeal),'no seafood in meals or quick-add');
+ ok(A.FOODS.length>=60&&A.FOODS.some(f=>/Pork tenderloin/.test(f[0]))&&A.FOODS.some(f=>/ready to drink/.test(f[0])),'more protein options in quick-add');
+ ok(A.MEALS.lunch.opts.length===A.MEALS.lunch.k.length&&A.MEALS.dinner.opts.length===A.MEALS.dinner.p.length,'meal kcal and protein arrays line up');
+ const fd=addD(t0,40);A.UI.date=fd;A.render();click('[data-act=foodopen][data-slot=dinner]');ok(/Nothing added yet/.test(d.querySelector('#fadded').textContent),'add-food shows empty added list');
+ const v_addBtn=d.querySelector('[data-act=foodadd]');v_addBtn.click();
+ ok(/Added to this meal \(1\)/.test(d.querySelector('#fadded').textContent)&&v_addBtn.disabled&&/Added/.test(v_addBtn.textContent),'Add gives instant feedback and shows the item');
+ v_addBtn.click();ok(S.days[fd].foods.dinner.length===1,'double tap while flashing does not add twice');
+ const v_tz=[...d.querySelectorAll('.toast')];ok(v_tz.length>0&&w.getComputedStyle(v_tz[v_tz.length-1]).zIndex==='100','toast shows above the food screen');
+ click('#fadded [data-act=foodundo]');ok(S.days[fd].foods.dinner.length===0&&/Nothing added yet/.test(d.querySelector('#fadded').textContent),'remove from inside the food screen');
+ click('[data-act=foodclose]');A.UI.date=t0;
+ ok(errors.length===0,'no errors v19 '+errors.join('|'));
  ok(errors.length===0,'no errors end '+errors.join('|'));
 })().catch(e=>{console.log('FAIL exception',e.stack);process.exitCode=1;}).finally(()=>process.exit(process.exitCode||0));

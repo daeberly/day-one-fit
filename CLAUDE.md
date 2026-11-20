@@ -44,7 +44,7 @@ State is one object `S` saved to `localStorage` key `dayone.v1`:
 
 `{ settings, weights, days, tests, reads }`
 
-- `S.settings`: `startDate, startWeight, goalWeight, goalDate, waterGoal, autoRest, kcalGoal, hrAge, hrMax, heightIn, protGoal, maint, lastCheckin, snooze, timerVoice, sched{id:'HH:MM'}, aiModel`.
+- `S.settings`: `startDate, startWeight, goalWeight, goalDate, waterGoal, autoRest, kcalGoal, hrAge, hrMax, heightIn, protGoal, maint, lastCheckin, snooze, timerVoice, sched{id:'HH:MM'}, aiModel, cpref{base:id}` (last cardio choice per slot).
 - `S.weights`: `[{id,date,w,time,tod,...}]`. The 7-day moving average (`wSeries().ma`) drives all pace math, not single readings.
 - `S.days[YYYY-MM-DD]`:
   - `sets{exId:[{w,r,done,ts}]}`, `cardio{id:{done,dts,min,rpe,hravg,hrpk,hrrec,note,p{partId:[{d,t,ts}]}}}`
@@ -53,6 +53,7 @@ State is one object `S` saved to `localStorage` key `dayone.v1`:
   - `stress` (1-5), `alc` (drinks, 150 kcal each, counted in `kcalDay`)
   - `extra[{id,a,min,dist,rpe,hr,hx,hrr,z[5],w,wx,sp,spx,cad,cadx,kc,n,src}]` (anything off-plan)
   - `swap` (workout index moved onto this day), `madeUp` (date, or `'skipped'`)
+  - `cpick{base:id}` (cardio option chosen for this day, see `CALT`), `gtg` (pull-up practice sets)
 - `S.tests[{id,date,v{metric:value}}]`: monthly baseline tests (times in seconds). Metric list is `TESTS`.
 - `S.reads[date]`: stored monthly AI photo reads.
 - IndexedDB `dayone-photos`: store `p` (meal photos: `{id,date,slot,ts,full,thumb}`) and store `b` (body photos: `{id,date,pose,ts,full,thumb}`).
@@ -61,7 +62,7 @@ State is one object `S` saved to `localStorage` key `dayone.v1`:
 ## Code structure (all inside index.html)
 
 - Helpers: `today, addDays, diffDays, parse, ymd, fmtD, f1, mean, esc, uid, ensureDay, getDay, toast, numOrU, save`.
-- Plan: `WORKOUTS` by weekday (0 Sun pool, 1 Mon speed, 2 Tue legs, 3 Wed upper, 4 Thu pool, 5 Fri posterior, 6 Sat full body). Use **`planFor(d)`** (not `WORKOUTS[...]` directly) so make-up swaps work. `EX` exercise library, `CARDIO` blocks, `PARTS` per-step checklists, `STRETCH`, `WARM`, `MEALS` (with `.k` kcal and `.p` protein per option), `FOODS` quick-add list, `FMETA` (sugar/category for allowances), `ACTS` activity list with METs.
+- Plan: `WORKOUTS` by weekday (0 Sun pool, 1 Mon speed, 2 Tue legs, 3 Wed upper, 4 Thu pool, 5 Fri posterior, 6 Sat full body). Use **`planFor(d)`** (not `WORKOUTS[...]` directly) so make-up swaps and cardio choices work. Workout entries are `[exId, sets, supersetLetter?]`. `CALT` lists the cardio alternatives for `pool_thu`, `pool_sun` and `speed`; `cPick/cSetPick` resolve and save the choice (an option with logged data wins over the saved preference). Exercises with `asst:true` log assistance in the lb box (less is harder); `first`/`harder` override the overload engine's text. `EX` exercise library, `CARDIO` blocks, `PARTS` per-step checklists, `STRETCH`, `WARM`, `MEALS` (with `.k` kcal and `.p` protein per option), `FOODS` quick-add list, `FMETA` (sugar/category for allowances), `ACTS` activity list with METs.
 - Views: `render()` rebuilds `#app` from `viewToday, viewWeight, viewPhotos, viewProgress, viewPlan (the Coach tab, id 'plan'), viewMore`. Tab bar has 6 tabs. Overlays (`#timer, #testov, #hrov, #viewer, #foodov, #tlov`) are body-level divs.
 - Events: **delegated**. Click handlers use `data-act` -> `act(a,t)` switch. Change handlers use `data-chg` -> `chg(k,t)` switch. `data-live` range sliders and `data-fq` search use the `input` listener.
 - Feature areas (search for these names):
@@ -91,7 +92,7 @@ cd tests && npm install && npm test
 ```
 
 - `test-core.js` (116 checks): setup, workouts, overload engine, heart rate, reminders, tests, settings.
-- `test-coach.js` (117 checks): Coach, schedule, catch-up, food, AI (mocked fetch), body composition, allowances, extra activity, scans, trends, step logs, timing.
+- `test-coach.js` (163 checks): Coach, schedule, catch-up, food, AI (mocked fetch), body composition, allowances, extra activity, scans, trends, step logs, timing.
 - All must pass before any commit. Add checks for every new feature in `test-coach.js`.
 - Also syntax-check the inline script (`new Function(script)`) and, for UI changes, take a 390 px wide Playwright screenshot.
 
@@ -110,7 +111,7 @@ cd tests && npm install && npm test
 - He wants honest limits and honest math, not hype. Give real numbers and say when something is an estimate.
 - Memory rule from his account: always get his explicit approval before sending or deleting emails or sending calendar invites.
 
-## Status: v18 (Nov 16, 2026)
+## Status: v19 (Nov 20, 2026)
 
 Delivered so far:
 
@@ -120,6 +121,9 @@ Delivered so far:
 - v11: fruit, juice, milk, cheese allowances and free-sugar tracking.
 - v12-v17: extra activity logging (searchable list), screen scan via AI, machine kcal, heart rate avg/max/recovery, avg/max watts/speed/cadence, zone minutes, training baseline and trends.
 - v18: step-by-step checklists (speed/agility/plyo, finisher, pool, zone 2), warm-up and stretch checklists, silent timestamps and workout timing with long-workout flags.
+- v19: cardio choices on Thu/Sun (swim, bike, row, run, incline walk) and an indoor speed day; pull-up program (strict, band-assisted, negatives, optional practice); assisted dips; arm and lateral-raise work with supersets to keep Wed/Sat near 60 min; no seafood; more protein foods; Add food feedback fix.
+
+D's preferences: no fish or seafood. Sessions 60 min max including warm-up and stretch. Has a full gym at work (fan bike, rower, treadmill, cables, dumbbells, pull-up bar, bands). Goal: 10-15 strict pull-ups, eventually weighted.
 
 ## Likely next work (ask D which to do)
 

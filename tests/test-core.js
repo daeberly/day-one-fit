@@ -20,7 +20,7 @@ const set=(sel,v)=>{const e=d.querySelector(sel);e.value=v;e.dispatchEvent(new w
  // pin date to Day 1 (Saturday)
  A.UI.date='2026-10-24';A.render();
  ok(d.body.textContent.includes('Full body'),'Saturday full-body workout');
- ok(d.body.textContent.includes('Goblet squat')&&d.body.textContent.includes('Kneeling cable crunch'),'exercises listed');
+ ok(d.body.textContent.includes('Goblet squat')&&d.body.textContent.includes('Pull-up negative'),'exercises listed');
  ok(d.body.textContent.includes('3 sec down')&&d.body.textContent.includes('2-3 reps shy of failure')&&d.body.textContent.includes('2 reps left'),'tempo + effort guidance shows (week 1)');
  ok(d.body.textContent.includes('Day 1 · Week 1'),'Day 1 Week 1 label');
  // log a set
@@ -30,8 +30,8 @@ const set=(sel,v)=>{const e=d.querySelector(sel);e.value=v;e.dispatchEvent(new w
  click('[data-act=setdone][data-ex=goblet][data-i="1"]');
  const s1=A.S().days['2026-10-24'].sets.goblet[1];
  ok(s1.done&&s1.r===8,'empty set auto-fills target reps');
- click('[data-act=addset][data-ex=plank]');
- ok(d.querySelectorAll('[data-ex=plank][data-f=r]').length===4,'+ set adds row');
+ click('[data-act=addset][data-ex=facepull]');
+ ok(d.querySelectorAll('[data-ex=facepull][data-f=r]').length===3,'+ set adds row');
  // cardio, stretch, meal, water, sleep
  click('[data-act=cardiodone][data-id=incline]');ok(A.S().days['2026-10-24'].cardio.incline.done&&A.S().days['2026-10-24'].cardio.incline.min===15,'cardio done with default minutes');
  click('[data-act=stretchdone]');ok(A.S().days['2026-10-24'].checks.stretch,'stretch done');
@@ -55,7 +55,7 @@ const set=(sel,v)=>{const e=d.querySelector(sel);e.value=v;e.dispatchEvent(new w
  const SS=A.S();
  SS.days['2026-10-17']={sets:{inclinepress:[{w:40,r:12,done:true},{w:40,r:12,done:true},{w:40,r:12,done:true}],cablefly:[{w:20,r:12,done:true},{w:20,r:11,done:true},{w:20,r:10,done:true}]}};
  SS.days['2026-10-10']={sets:{cablefly:[{w:20,r:12,done:true},{w:20,r:11,done:true},{w:20,r:10,done:true}]}};
- A.UI.date='2026-10-24';A.render();
+ A.UI.date='2026-10-28';A.render();
  ok(/Add weight: 45 lb/.test(d.body.textContent),'hit top reps on all sets -> add weight (incline press 40 -> 45)');
  A.UI.date='2026-10-21';A.render();
  ok(/Stalled/.test(d.body.textContent)||true,'n/a');
